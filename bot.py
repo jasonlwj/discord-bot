@@ -5,12 +5,12 @@ import os
 import random
 
 from dotenv import load_dotenv
-from discord.ext.commands import Bot
+from discord.ext import commands
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-bot = Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!')
 
 @bot.event
 async def on_ready():
@@ -28,18 +28,39 @@ async def react_message(ctx):
 
 @bot.command(name='roll', help='Simulates a random number generator')
 async def roll(ctx, *args: int):
+	# if len(args) == 0:
+	# 	response = str(random.randint(1, 100))
+	# elif len(args) == 1:
+	# 	response = str(random.randint(1, args[0]))
+	# elif len(args) == 2:
+	# 	response = str(random.randint(args[0], args[1]))
+	# else:
+	# 	response = 'Invalid number of arguments'
+
 	if len(args) == 0:
-		response = str(random.randint(1, 100))
+		roll_min, roll_max = 1, 100
 	elif len(args) == 1:
-		response = str(random.randint(1, args[0]))
+		roll_min, roll_max = 1, args[0]
 	elif len(args) == 2:
-		response = str(random.randint(args[0], args[1]))
+		roll_min, roll_max = args[0], args[1]
 	else:
-		response = 'Invalid number of arguments'
+		raise commands.TooManyArguments
+
+	response = str(random.randint(roll_min, roll_max))
 
 	await ctx.send(response)
 
-	# TODO: add exception handling
+@roll.error
+async def roll_error(ctx, error):
+	if isinstance(error, commands.UserInputError):
+		await ctx.send(
+			'```'
+			'Usage:\n'
+			'- !roll\n'
+			'- !roll [max]\n'
+			'- !roll [min] [max]\n'
+			'```'
+		)
 
 @bot.command(name='say')
 async def say(ctx):
